@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  EnvName:
+    Type: String
+    Default: dev
+Conditions:
+  IsProd:
+    !Equals [!Ref EnvName, "prod"]
+Resources:
+  OriginAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: web-origin-access-identity
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !If [IsProd, "bitterbattles-web-files", !Sub "bitterbattles-web-${EnvName}-files"]
+      PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref Bucket
+      PolicyDocument:
+        Statement:
+          - Principal:
+              CanonicalUser: !GetAtt OriginAccessIdentity.S3CanonicalUserId
+            Action:
+              - s3:GetObject
+            Effect: Allow
+            Resource: !Join ["", [!GetAtt Bucket.Arn, "/*"]]
+  Certificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !If [IsProd, "bitterbattles.com", !Sub "${EnvName}.bitterbattles.com"]
+      ValidationMethod: DNS
+  # Distribution:
+  #   Type: AWS::CloudFront::Distribution
+  #   Properties: 
+  #     DistributionConfig:
+  #         Enabled: true
+  #         Aliases:
+  #           - !If [IsProd, "bitterbattles.com", !Sub "${EnvName}.bitterbattles.com"]
+  #         Origins:
+  #           - Id: web
+  #             DomainName: !GetAtt Bucket.DomainName
+  #             S3OriginConfig:
+  #               OriginAccessIdentity: !Join ["", ["origin-access-identity/cloudfront/", !Ref OriginAccessIdentity]]
+  #         ViewerCertificate:
+  #           AcmCertificateArn: !Ref Certificate
+  #           MinimumProtocolVersion: TLSv1
+  #           SslSupportMethod: sni-only
+  #         DefaultRootObject: index.html
+  #         DefaultCacheBehavior:
+  #           TargetOriginId: web
+  #           ViewerProtocolPolicy: redirect-to-https
+  #           ForwardedValues:
+  #             QueryString: false
