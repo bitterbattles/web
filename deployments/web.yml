@@ -38,25 +38,25 @@ Resources:
     Properties:
       DomainName: !If [IsProd, "bitterbattles.com", !Sub "${EnvName}.bitterbattles.com"]
       ValidationMethod: DNS
-  # Distribution:
-  #   Type: AWS::CloudFront::Distribution
-  #   Properties: 
-  #     DistributionConfig:
-  #         Enabled: true
-  #         Aliases:
-  #           - !If [IsProd, "bitterbattles.com", !Sub "${EnvName}.bitterbattles.com"]
-  #         Origins:
-  #           - Id: web
-  #             DomainName: !GetAtt Bucket.DomainName
-  #             S3OriginConfig:
-  #               OriginAccessIdentity: !Join ["", ["origin-access-identity/cloudfront/", !Ref OriginAccessIdentity]]
-  #         ViewerCertificate:
-  #           AcmCertificateArn: !Ref Certificate
-  #           MinimumProtocolVersion: TLSv1
-  #           SslSupportMethod: sni-only
-  #         DefaultRootObject: index.html
-  #         DefaultCacheBehavior:
-  #           TargetOriginId: web
-  #           ViewerProtocolPolicy: redirect-to-https
-  #           ForwardedValues:
-  #             QueryString: false
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties: 
+      DistributionConfig:
+          Enabled: true
+          Aliases:
+            - !If [IsProd, "bitterbattles.com", !Sub "${EnvName}.bitterbattles.com"]
+          Origins:
+            - Id: web
+              DomainName: !GetAtt Bucket.DomainName
+              S3OriginConfig:
+                OriginAccessIdentity: !Join ["", ["origin-access-identity/cloudfront/", !Ref OriginAccessIdentity]]
+          ViewerCertificate:
+            AcmCertificateArn: !Ref Certificate
+            MinimumProtocolVersion: TLSv1
+            SslSupportMethod: sni-only
+          DefaultRootObject: index.html
+          DefaultCacheBehavior:
+            TargetOriginId: web
+            ViewerProtocolPolicy: redirect-to-https
+            ForwardedValues:
+              QueryString: false
